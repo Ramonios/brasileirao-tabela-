@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador do Campeonato Brasileiro 2026</title>
   <style>
-    /* RESET & VARIAVEIS */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -22,7 +21,6 @@
       position: relative;
     }
 
-    /* ESCUDO DA CBF TRANSLÚCIDO AO FUNDO */
     body::before {
       content: "";
       position: fixed;
@@ -40,7 +38,6 @@
       pointer-events: none;
     }
 
-    /* HEADER & NAVEGAÇÃO (Verde, Amarelo e Azul) */
     header {
       background: linear-gradient(135deg, #009c3b 0%, #002776 100%);
       border-bottom: 4px solid #ffdf00;
@@ -87,15 +84,10 @@
       padding: 0 15px;
     }
 
-    .tab-content {
-      display: none;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-    .tab-content.active {
-      display: block;
-    }
-
-    /* ESTILOS DA TABELA DE CLASSIFICAÇÃO */
+    /* TABELA */
     .table-container {
       background-color: rgba(10, 30, 18, 0.85);
       border-radius: 10px;
@@ -124,16 +116,9 @@
       font-size: 0.85rem;
     }
 
-    tr:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
+    tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+    .col-pos { font-weight: bold; width: 40px; }
 
-    .col-pos {
-      font-weight: bold;
-      width: 40px;
-    }
-
-    /* CORES DAS POSIÇÕES NA TABELA */
     tr.g4 .col-pos { background-color: #009c3b; color: #fff; }
     tr.g5 .col-pos { background-color: #ffdf00; color: #000; }
     tr.z4 .col-pos { background-color: #d90429; color: #fff; }
@@ -152,10 +137,7 @@
       object-fit: contain;
     }
 
-    .pts-col {
-      font-weight: bold;
-      color: #ffdf00;
-    }
+    .pts-col { font-weight: bold; color: #ffdf00; }
 
     .legend {
       display: flex;
@@ -166,28 +148,39 @@
       justify-content: center;
     }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .legend-box {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-    }
-
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-box { width: 14px; height: 14px; border-radius: 3px; }
     .bg-green { background-color: #009c3b; }
     .bg-yellow { background-color: #ffdf00; }
     .bg-red { background-color: #d90429; }
 
-    /* ESTILOS DA ABA JOGOS */
-    .games-list {
+    /* CONTROLES DE RODADA */
+    .round-selector {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(10, 30, 18, 0.9);
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid #ffdf00;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
+
+    .round-selector select {
+      background-color: #002776;
+      color: #ffdf00;
+      border: 1px solid #ffdf00;
+      padding: 8px 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    /* CARD DE JOGO */
+    .games-list { display: flex; flex-direction: column; gap: 15px; }
 
     .game-card {
       background-color: rgba(10, 30, 18, 0.85);
@@ -201,11 +194,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    .game-date {
-      font-size: 0.85rem;
-      color: #ffdf00;
-      font-weight: bold;
-    }
+    .game-date { font-size: 0.85rem; color: #ffdf00; font-weight: bold; }
 
     .game-matchup {
       display: flex;
@@ -216,16 +205,9 @@
       max-width: 600px;
     }
 
-    .team-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-    }
-
+    .team-info { display: flex; align-items: center; gap: 8px; flex: 1; }
     .team-info.home { justify-content: flex-end; text-align: right; }
     .team-info.away { justify-content: flex-start; text-align: left; }
-
     .team-info span { font-weight: 600; font-size: 0.95rem; }
 
     .score-input {
@@ -263,7 +245,6 @@
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
-      margin-bottom: 15px;
     }
 
     footer {
@@ -317,15 +298,20 @@
 
     <!-- ABA JOGOS -->
     <section id="tab-jogos" class="tab-content">
-      <div style="text-align: right;">
-        <button class="btn-reset" onclick="resetSimulations()">Resetar Placares</button>
+      <div class="round-selector">
+        <div>
+          <label for="select-round"><b>Selecione a Rodada: </b></label>
+          <select id="select-round" onchange="changeRound()"></select>
+        </div>
+        <button class="btn-reset" onclick="resetSimulations()">Resetar Todos os Placares</button>
       </div>
+
       <div class="games-list" id="games-container"></div>
     </section>
   </main>
 
   <footer>
-    <p>Simulador do Brasileirão Série A 2026 — Modifique os placares e veja as alterações em tempo real!</p>
+    <p>Simulador do Brasileirão Série A 2026 — Selecione as rodadas, altere os placares e veja as posições mudarem na tabela!</p>
   </footer>
 
   <script>
@@ -353,34 +339,79 @@
     ];
 
     const defaultGames = [
-      { id: 1, homeId: 'CFC', awayId: 'CAP', date: 'Rodada 27 - 11/09 (Sexta 21:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 2, homeId: 'CAM', awayId: 'FLU', date: 'Rodada 27 - 12/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 3, homeId: 'GRE', awayId: 'VAS', date: 'Rodada 27 - 12/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 4, homeId: 'CHA', awayId: 'INT', date: 'Rodada 27 - 12/09 (Sábado 17:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 5, homeId: 'PAL', awayId: 'SPFC', date: 'Rodada 27 - 12/09 (Sábado 18:30)', homeScore: '', awayScore: '', applied: false },
-      { id: 6, homeId: 'BOT', awayId: 'RBB', date: 'Rodada 27 - 12/09 (Sábado 20:30)', homeScore: '', awayScore: '', applied: false },
-      { id: 7, homeId: 'SAN', awayId: 'CRU', date: 'Rodada 27 - 12/09 (Sábado 21:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 8, homeId: 'MIR', awayId: 'VIT', date: 'Rodada 27 - 13/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 9, homeId: 'FLA', awayId: 'COR', date: 'Rodada 27 - 13/09 (Domingo 17:30)', homeScore: '', awayScore: '', applied: false },
-      { id: 10, homeId: 'BAH', awayId: 'REM', date: 'Rodada 27 - 14/09 (Segunda 20:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 11, homeId: 'CAM', awayId: 'CHA', date: 'Rodada 28 - 19/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 12, homeId: 'MIR', awayId: 'BOT', date: 'Rodada 28 - 19/09 (Sábado 17:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 13, homeId: 'REM', awayId: 'SAN', date: 'Rodada 28 - 19/09 (Sábado 18:30)', homeScore: '', awayScore: '', applied: false },
-      { id: 14, homeId: 'VAS', awayId: 'CFC', date: 'Rodada 28 - 19/09 (Sábado 20:30)', homeScore: '', awayScore: '', applied: false },
-      { id: 15, homeId: 'SPFC', awayId: 'INT', date: 'Rodada 28 - 19/09 (Sábado 21:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 16, homeId: 'GRE', awayId: 'PAL', date: 'Rodada 28 - 20/09 (Domingo 11:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 17, homeId: 'VIT', awayId: 'CRU', date: 'Rodada 28 - 20/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 18, homeId: 'COR', awayId: 'FLU', date: 'Rodada 28 - 20/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
-      { id: 19, homeId: 'FLA', awayId: 'RBB', date: 'Rodada 28 - 20/09 (Domingo 18:30)', homeScore: '', awayScore: '', applied: false },
-      { id: 20, homeId: 'CAP', awayId: 'BAH', date: 'Rodada 28 - 20/09 (Domingo 19:30)', homeScore: '', awayScore: '', applied: false }
+      // RODADA 27
+      { id: 1, round: 27, homeId: 'CFC', awayId: 'CAP', date: '11/09 (Sexta 21:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 2, round: 27, homeId: 'CAM', awayId: 'FLU', date: '12/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 3, round: 27, homeId: 'GRE', awayId: 'VAS', date: '12/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 4, round: 27, homeId: 'CHA', awayId: 'INT', date: '12/09 (Sábado 17:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 5, round: 27, homeId: 'PAL', awayId: 'SPFC', date: '12/09 (Sábado 18:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 6, round: 27, homeId: 'BOT', awayId: 'RBB', date: '12/09 (Sábado 20:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 7, round: 27, homeId: 'SAN', awayId: 'CRU', date: '12/09 (Sábado 21:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 8, round: 27, homeId: 'MIR', awayId: 'VIT', date: '13/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 9, round: 27, homeId: 'FLA', awayId: 'COR', date: '13/09 (Domingo 17:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 10, round: 27, homeId: 'BAH', awayId: 'REM', date: '14/09 (Segunda 20:00)', homeScore: '', awayScore: '', applied: false },
+
+      // RODADA 28
+      { id: 11, round: 28, homeId: 'CAM', awayId: 'CHA', date: '19/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 12, round: 28, homeId: 'MIR', awayId: 'BOT', date: '19/09 (Sábado 17:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 13, round: 28, homeId: 'REM', awayId: 'SAN', date: '19/09 (Sábado 18:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 14, round: 28, homeId: 'VAS', awayId: 'CFC', date: '19/09 (Sábado 20:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 15, round: 28, homeId: 'SPFC', awayId: 'INT', date: '19/09 (Sábado 21:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 16, round: 28, homeId: 'GRE', awayId: 'PAL', date: '20/09 (Domingo 11:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 17, round: 28, homeId: 'VIT', awayId: 'CRU', date: '20/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 18, round: 28, homeId: 'COR', awayId: 'FLU', date: '20/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 19, round: 28, homeId: 'FLA', awayId: 'RBB', date: '20/09 (Domingo 18:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 20, round: 28, homeId: 'CAP', awayId: 'BAH', date: '20/09 (Domingo 19:30)', homeScore: '', awayScore: '', applied: false },
+
+      // RODADA 29
+      { id: 21, round: 29, homeId: 'PAL', awayId: 'FLA', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 22, round: 29, homeId: 'FLU', awayId: 'BAH', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 23, round: 29, homeId: 'CRU', awayId: 'CAM', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 24, round: 29, homeId: 'COR', awayId: 'SPFC', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 25, round: 29, homeId: 'INT', awayId: 'GRE', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 26, round: 29, homeId: 'BOT', awayId: 'VAS', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 27, round: 29, homeId: 'RBB', awayId: 'CAP', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 28, round: 29, homeId: 'SAN', awayId: 'MIR', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 29, round: 29, homeId: 'CFC', awayId: 'REM', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 30, round: 29, homeId: 'CHA', awayId: 'VIT', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+
+      // RODADA 30
+      { id: 31, round: 30, homeId: 'BAH', awayId: 'PAL', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 32, round: 30, homeId: 'FLA', awayId: 'FLU', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 33, round: 30, homeId: 'CAM', awayId: 'COR', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 34, round: 30, homeId: 'SPFC', awayId: 'CRU', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 35, round: 30, homeId: 'GRE', awayId: 'BOT', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 36, round: 30, homeId: 'VAS', awayId: 'SAN', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 37, round: 30, homeId: 'CAP', awayId: 'INT', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 38, round: 30, homeId: 'VIT', awayId: 'RBB', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 39, round: 30, homeId: 'MIR', awayId: 'CFC', date: 'A definir', homeScore: '', awayScore: '', applied: false },
+      { id: 40, round: 30, homeId: 'REM', awayId: 'CHA', date: 'A definir', homeScore: '', awayScore: '', applied: false }
     ];
 
-    let teams = JSON.parse(localStorage.getItem('brasileirao_teams')) || JSON.parse(JSON.stringify(defaultTeams));
-    let games = JSON.parse(localStorage.getItem('brasileirao_games')) || JSON.parse(JSON.stringify(defaultGames));
+    let currentRound = 27;
+    let teams = JSON.parse(localStorage.getItem('brasileirao_teams_v2')) || JSON.parse(JSON.stringify(defaultTeams));
+    let games = JSON.parse(localStorage.getItem('brasileirao_games_v2')) || JSON.parse(JSON.stringify(defaultGames));
 
     function saveData() {
-      localStorage.setItem('brasileirao_teams', JSON.stringify(teams));
-      localStorage.setItem('brasileirao_games', JSON.stringify(games));
+      localStorage.setItem('brasileirao_teams_v2', JSON.stringify(teams));
+      localStorage.setItem('brasileirao_games_v2', JSON.stringify(games));
+    }
+
+    function populateRoundOptions() {
+      const select = document.getElementById('select-round');
+      select.innerHTML = '';
+      for (let i = 27; i <= 30; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = `Rodada ${i}`;
+        if (i === currentRound) opt.selected = true;
+        select.appendChild(opt);
+      }
+    }
+
+    function changeRound() {
+      currentRound = parseInt(document.getElementById('select-round').value);
+      renderGames();
     }
 
     function switchTab(tab) {
@@ -444,13 +475,15 @@
       const container = document.getElementById('games-container');
       container.innerHTML = '';
 
-      games.forEach(game => {
+      let roundGames = games.filter(g => g.round === currentRound);
+
+      roundGames.forEach(game => {
         let homeTeam = teams.find(t => t.id === game.homeId);
         let awayTeam = teams.find(t => t.id === game.awayId);
 
         container.innerHTML += `
           <div class="game-card">
-            <div class="game-date">${game.date}</div>
+            <div class="game-date">Rodada ${game.round} - ${game.date}</div>
             <div class="game-matchup">
               <div class="team-info home">
                 <span>${homeTeam.name}</span>
@@ -549,8 +582,8 @@
 
     function resetSimulations() {
       if(confirm('Deseja resetar todos os placares inseridos?')) {
-        localStorage.removeItem('brasileirao_teams');
-        localStorage.removeItem('brasileirao_games');
+        localStorage.removeItem('brasileirao_teams_v2');
+        localStorage.removeItem('brasileirao_games_v2');
         teams = JSON.parse(JSON.stringify(defaultTeams));
         games = JSON.parse(JSON.stringify(defaultGames));
         renderTable();
@@ -559,6 +592,7 @@
     }
 
     window.onload = () => {
+      populateRoundOptions();
       renderTable();
       renderGames();
     };
