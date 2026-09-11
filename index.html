@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador do Campeonato Brasileiro 2026</title>
+  <style>
+    /* RESET & VARIAVEIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #0d2818;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ESCUDO DA CBF TRANSLÚCIDO AO FUNDO */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 550px;
+      height: 550px;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/9/99/CBF_logo.svg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.08;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* HEADER & NAVEGAÇÃO (Verde, Amarelo e Azul) */
+    header {
+      background: linear-gradient(135deg, #009c3b 0%, #002776 100%);
+      border-bottom: 4px solid #ffdf00;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      color: #ffdf00;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 3px #000;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    nav button {
+      background-color: #002776;
+      color: #ffdf00;
+      border: 2px solid #ffdf00;
+      padding: 8px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    nav button:hover, nav button.active {
+      background-color: #ffdf00;
+      color: #002776;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1000px;
+      width: 100%;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ESTILOS DA TABELA DE CLASSIFICAÇÃO */
+    .table-container {
+      background-color: rgba(10, 30, 18, 0.85);
+      border-radius: 10px;
+      overflow-x: auto;
+      border: 1px solid rgba(255, 223, 0, 0.3);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    th {
+      background-color: #002776;
+      color: #ffdf00;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .col-pos {
+      font-weight: bold;
+      width: 40px;
+    }
+
+    /* CORES DAS POSIÇÕES NA TABELA */
+    tr.g4 .col-pos { background-color: #009c3b; color: #fff; }
+    tr.g5 .col-pos { background-color: #ffdf00; color: #000; }
+    tr.z4 .col-pos { background-color: #d90429; color: #fff; }
+
+    .team-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .team-badge {
+      width: 25px;
+      height: 25px;
+      object-fit: contain;
+    }
+
+    .pts-col {
+      font-weight: bold;
+      color: #ffdf00;
+    }
+
+    .legend {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+
+    .bg-green { background-color: #009c3b; }
+    .bg-yellow { background-color: #ffdf00; }
+    .bg-red { background-color: #d90429; }
+
+    /* ESTILOS DA ABA JOGOS */
+    .games-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .game-card {
+      background-color: rgba(10, 30, 18, 0.85);
+      border: 1px solid rgba(255, 223, 0, 0.2);
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .game-date {
+      font-size: 0.85rem;
+      color: #ffdf00;
+      font-weight: bold;
+    }
+
+    .game-matchup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .team-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .team-info.home { justify-content: flex-end; text-align: right; }
+    .team-info.away { justify-content: flex-start; text-align: left; }
+
+    .team-info span { font-weight: 600; font-size: 0.95rem; }
+
+    .score-input {
+      width: 45px;
+      height: 35px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: 2px solid #ffdf00;
+      border-radius: 5px;
+      background-color: #002776;
+      color: #fff;
+    }
+
+    .vs-text { font-weight: bold; font-size: 0.9rem; color: #aaa; }
+
+    .btn-apply {
+      background-color: #009c3b;
+      color: white;
+      border: none;
+      padding: 6px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-apply:hover { background-color: #007a2e; }
+
+    .btn-reset {
+      background-color: #d90429;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      border-top: 1px solid rgba(255, 223, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CAMPEONATO BRASILEIRO 2026</h1>
+    <nav>
+      <button id="btn-home" class="active" onclick="switchTab('home')">Home (Tabela)</button>
+      <button id="btn-jogos" onclick="switchTab('jogos')">Jogos</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- TABELA PRINCIPAL -->
+    <section id="tab-home" class="tab-content active">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th style="text-align: left;">Clube</th>
+              <th>P</th>
+              <th>J</th>
+              <th>V</th>
+              <th>E</th>
+              <th>D</th>
+              <th>GP</th>
+              <th>GC</th>
+              <th>SG</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-box bg-green"></div><span>G-4 (Libertadores)</span></div>
+        <div class="legend-item"><div class="legend-box bg-yellow"></div><span>5º Colocado</span></div>
+        <div class="legend-item"><div class="legend-box bg-red"></div><span>Z-4 (Rebaixamento)</span></div>
+      </div>
+    </section>
+
+    <!-- ABA JOGOS -->
+    <section id="tab-jogos" class="tab-content">
+      <div style="text-align: right;">
+        <button class="btn-reset" onclick="resetSimulations()">Resetar Placares</button>
+      </div>
+      <div class="games-list" id="games-container"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Simulador do Brasileirão Série A 2026 — Modifique os placares e veja as alterações em tempo real!</p>
+  </footer>
+
+  <script>
+    const defaultTeams = [
+      { id: 'FLA', name: 'Flamengo', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/orE554NToSkH6nuwofe7Yg_500x500.png', p: 54, j: 26, v: 16, e: 6, d: 4, gp: 51, gc: 21 },
+      { id: 'PAL', name: 'Palmeiras', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/7spurne-xDt2p6C0imYYNA_500x500.png', p: 53, j: 26, v: 15, e: 8, d: 3, gp: 45, gc: 21 },
+      { id: 'CAP', name: 'Athletico-PR', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/9LkdBR4L5plovKM8eIy7nQ_500x500.png', p: 45, j: 26, v: 13, e: 6, d: 7, gp: 38, gc: 28 },
+      { id: 'FLU', name: 'Fluminense', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/fCMxMMDF2AZPU7LzYKSlig_500x500.png', p: 45, j: 26, v: 12, e: 9, d: 5, gp: 40, gc: 32 },
+      { id: 'BAH', name: 'Bahia', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/nIdbR6qIUDyZUBO9vojSPw_500x500.png', p: 43, j: 26, v: 11, e: 10, d: 5, gp: 40, gc: 32 },
+      { id: 'CRU', name: 'Cruzeiro', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/Tcv9X__nIh-6wFNJPMwIXQ_500x500.png', p: 42, j: 26, v: 12, e: 6, d: 8, gp: 38, gc: 37 },
+      { id: 'CFC', name: 'Coritiba', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/LaFlBADLmsjHfGTehCYtuA_500x500.png', p: 37, j: 26, v: 10, e: 7, d: 9, gp: 34, gc: 35 },
+      { id: 'CAM', name: 'Atlético-MG', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/q9fhEsgpuyRq58OgmSndcQ_500x500.png', p: 36, j: 25, v: 10, e: 6, d: 9, gp: 32, gc: 30 },
+      { id: 'RBB', name: 'Red Bull Bragantino', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/lMyw2zn1Z4cdkaxKJWnsQw_500x500.png', p: 35, j: 25, v: 10, e: 5, d: 10, gp: 31, gc: 28 },
+      { id: 'SPFC', name: 'São Paulo', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/4w2Z97Hf9CSOqICK3a8AxQ_500x500.png', p: 33, j: 25, v: 9, e: 6, d: 10, gp: 31, gc: 28 },
+      { id: 'VIT', name: 'Vitória', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/LHSM6VchpkI4NIptoSTHOg_500x500.png', p: 32, j: 26, v: 9, e: 5, d: 12, gp: 25, gc: 37 },
+      { id: 'COR', name: 'Corinthians', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/tCMSqgXVHROpdCpQhzTo1g_500x500.png', p: 32, j: 26, v: 8, e: 8, d: 10, gp: 27, gc: 27 },
+      { id: 'SAN', name: 'Santos', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/VHdNOT6wWOw_vJ38GMjMzg_500x500.png', p: 32, j: 25, v: 8, e: 8, d: 9, gp: 37, gc: 38 },
+      { id: 'BOT', name: 'Botafogo', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/KLDWYp-H8CAOT9H_JgizRg_500x500.png', p: 31, j: 25, v: 8, e: 7, d: 10, gp: 37, gc: 40 },
+      { id: 'GRE', name: 'Grêmio', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/Ku-73v_TW9kpex-IEGb0ZA_500x500.png', p: 28, j: 25, v: 7, e: 7, d: 11, gp: 27, gc: 33 },
+      { id: 'MIR', name: 'Mirassol', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/5J3JY7fcdiDYU5rbPW7AKA_500x500.png', p: 28, j: 26, v: 7, e: 7, d: 12, gp: 29, gc: 40 },
+      { id: 'VAS', name: 'Vasco', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/hHwT8LwRmYCAGxQ-STLxYA_500x500.png', p: 25, j: 25, v: 6, e: 7, d: 12, gp: 27, gc: 40 },
+      { id: 'INT', name: 'Internacional', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/OWVFKuHrQuf4q2Wk0hEmSA_500x500.png', p: 25, j: 26, v: 5, e: 10, d: 11, gp: 28, gc: 34 },
+      { id: 'REM', name: 'Remo', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/bENrK5iSMF6sXrEkDNNxng_500x500.png', p: 23, j: 26, v: 5, e: 8, d: 13, gp: 30, gc: 43 },
+      { id: 'CHA', name: 'Chapecoense', logo: 'https://ssl.gstatic.com/onebox/media/sports/logos/optimized/K7JQUKTRsuXfO9YrD5dq5g_500x500.png', p: 17, j: 25, v: 3, e: 8, d: 14, gp: 27, gc: 50 }
+    ];
+
+    const defaultGames = [
+      { id: 1, homeId: 'CFC', awayId: 'CAP', date: 'Rodada 27 - 11/09 (Sexta 21:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 2, homeId: 'CAM', awayId: 'FLU', date: 'Rodada 27 - 12/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 3, homeId: 'GRE', awayId: 'VAS', date: 'Rodada 27 - 12/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 4, homeId: 'CHA', awayId: 'INT', date: 'Rodada 27 - 12/09 (Sábado 17:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 5, homeId: 'PAL', awayId: 'SPFC', date: 'Rodada 27 - 12/09 (Sábado 18:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 6, homeId: 'BOT', awayId: 'RBB', date: 'Rodada 27 - 12/09 (Sábado 20:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 7, homeId: 'SAN', awayId: 'CRU', date: 'Rodada 27 - 12/09 (Sábado 21:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 8, homeId: 'MIR', awayId: 'VIT', date: 'Rodada 27 - 13/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 9, homeId: 'FLA', awayId: 'COR', date: 'Rodada 27 - 13/09 (Domingo 17:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 10, homeId: 'BAH', awayId: 'REM', date: 'Rodada 27 - 14/09 (Segunda 20:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 11, homeId: 'CAM', awayId: 'CHA', date: 'Rodada 28 - 19/09 (Sábado 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 12, homeId: 'MIR', awayId: 'BOT', date: 'Rodada 28 - 19/09 (Sábado 17:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 13, homeId: 'REM', awayId: 'SAN', date: 'Rodada 28 - 19/09 (Sábado 18:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 14, homeId: 'VAS', awayId: 'CFC', date: 'Rodada 28 - 19/09 (Sábado 20:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 15, homeId: 'SPFC', awayId: 'INT', date: 'Rodada 28 - 19/09 (Sábado 21:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 16, homeId: 'GRE', awayId: 'PAL', date: 'Rodada 28 - 20/09 (Domingo 11:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 17, homeId: 'VIT', awayId: 'CRU', date: 'Rodada 28 - 20/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 18, homeId: 'COR', awayId: 'FLU', date: 'Rodada 28 - 20/09 (Domingo 16:00)', homeScore: '', awayScore: '', applied: false },
+      { id: 19, homeId: 'FLA', awayId: 'RBB', date: 'Rodada 28 - 20/09 (Domingo 18:30)', homeScore: '', awayScore: '', applied: false },
+      { id: 20, homeId: 'CAP', awayId: 'BAH', date: 'Rodada 28 - 20/09 (Domingo 19:30)', homeScore: '', awayScore: '', applied: false }
+    ];
+
+    let teams = JSON.parse(localStorage.getItem('brasileirao_teams')) || JSON.parse(JSON.stringify(defaultTeams));
+    let games = JSON.parse(localStorage.getItem('brasileirao_games')) || JSON.parse(JSON.stringify(defaultGames));
+
+    function saveData() {
+      localStorage.setItem('brasileirao_teams', JSON.stringify(teams));
+      localStorage.setItem('brasileirao_games', JSON.stringify(games));
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+
+      if(tab === 'home') {
+        document.getElementById('tab-home').classList.add('active');
+        document.getElementById('btn-home').classList.add('active');
+      } else {
+        document.getElementById('tab-jogos').classList.add('active');
+        document.getElementById('btn-jogos').classList.add('active');
+      }
+    }
+
+    function renderTable() {
+      teams.sort((a, b) => {
+        let sgA = a.gp - a.gc;
+        let sgB = b.gp - b.gc;
+        if (b.p !== a.p) return b.p - a.p;
+        if (b.v !== a.v) return b.v - a.v;
+        if (sgB !== sgA) return sgB - sgA;
+        return b.gp - a.gp;
+      });
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      teams.forEach((team, index) => {
+        let pos = index + 1;
+        let classGroup = '';
+        if (pos <= 4) classGroup = 'g4';
+        else if (pos === 5) classGroup = 'g5';
+        else if (pos >= 17) classGroup = 'z4';
+
+        let sg = team.gp - team.gc;
+
+        tbody.innerHTML += `
+          <tr class="${classGroup}">
+            <td class="col-pos">${pos}º</td>
+            <td>
+              <div class="team-cell">
+                <img src="${team.logo}" alt="${team.name}" class="team-badge" onError="this.src='https://via.placeholder.com/25'">
+                <span>${team.name}</span>
+              </div>
+            </td>
+            <td class="pts-col">${team.p}</td>
+            <td>${team.j}</td>
+            <td>${team.v}</td>
+            <td>${team.e}</td>
+            <td>${team.d}</td>
+            <td>${team.gp}</td>
+            <td>${team.gc}</td>
+            <td>${sg > 0 ? '+' + sg : sg}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderGames() {
+      const container = document.getElementById('games-container');
+      container.innerHTML = '';
+
+      games.forEach(game => {
+        let homeTeam = teams.find(t => t.id === game.homeId);
+        let awayTeam = teams.find(t => t.id === game.awayId);
+
+        container.innerHTML += `
+          <div class="game-card">
+            <div class="game-date">${game.date}</div>
+            <div class="game-matchup">
+              <div class="team-info home">
+                <span>${homeTeam.name}</span>
+                <img src="${homeTeam.logo}" alt="${homeTeam.name}" class="team-badge">
+              </div>
+              <input type="number" min="0" class="score-input" id="home-${game.id}" value="${game.homeScore}">
+              <span class="vs-text">X</span>
+              <input type="number" min="0" class="score-input" id="away-${game.id}" value="${game.awayScore}">
+              <div class="team-info away">
+                <img src="${awayTeam.logo}" alt="${awayTeam.name}" class="team-badge">
+                <span>${awayTeam.name}</span>
+              </div>
+            </div>
+            <button class="btn-apply" onclick="updateGameScore(${game.id})">Confirmar Placar</button>
+          </div>
+        `;
+      });
+    }
+
+    function updateGameScore(gameId) {
+      let game = games.find(g => g.id === gameId);
+      let homeInput = document.getElementById(`home-${gameId}`).value;
+      let awayInput = document.getElementById(`away-${gameId}`).value;
+
+      if (homeInput === '' || awayInput === '') {
+        alert('Por favor, preencha o placar dos dois times.');
+        return;
+      }
+
+      let hs = parseInt(homeInput);
+      let as = parseInt(awayInput);
+
+      let homeTeam = teams.find(t => t.id === game.homeId);
+      let awayTeam = teams.find(t => t.id === game.awayId);
+
+      if (game.applied) {
+        revertGameStats(homeTeam, awayTeam, game.prevHs, game.prevAs);
+      }
+
+      homeTeam.j += 1;
+      awayTeam.j += 1;
+      homeTeam.gp += hs;
+      homeTeam.gc += as;
+      awayTeam.gp += as;
+      awayTeam.gc += hs;
+
+      if (hs > as) {
+        homeTeam.p += 3;
+        homeTeam.v += 1;
+        awayTeam.d += 1;
+      } else if (as > hs) {
+        awayTeam.p += 3;
+        awayTeam.v += 1;
+        homeTeam.d += 1;
+      } else {
+        homeTeam.p += 1;
+        awayTeam.p += 1;
+        homeTeam.e += 1;
+        awayTeam.e += 1;
+      }
+
+      game.homeScore = hs;
+      game.awayScore = as;
+      game.prevHs = hs;
+      game.prevAs = as;
+      game.applied = true;
+
+      saveData();
+      renderTable();
+      alert(`Placar atualizado na Tabela!`);
+    }
+
+    function revertGameStats(homeTeam, awayTeam, hs, as) {
+      homeTeam.j -= 1;
+      awayTeam.j -= 1;
+      homeTeam.gp -= hs;
+      homeTeam.gc -= as;
+      awayTeam.gp -= as;
+      awayTeam.gc -= hs;
+
+      if (hs > as) {
+        homeTeam.p -= 3;
+        homeTeam.v -= 1;
+        awayTeam.d -= 1;
+      } else if (as > hs) {
+        awayTeam.p -= 3;
+        awayTeam.v -= 1;
+        homeTeam.d -= 1;
+      } else {
+        homeTeam.p -= 1;
+        awayTeam.p -= 1;
+        homeTeam.e -= 1;
+        awayTeam.e -= 1;
+      }
+    }
+
+    function resetSimulations() {
+      if(confirm('Deseja resetar todos os placares inseridos?')) {
+        localStorage.removeItem('brasileirao_teams');
+        localStorage.removeItem('brasileirao_games');
+        teams = JSON.parse(JSON.stringify(defaultTeams));
+        games = JSON.parse(JSON.stringify(defaultGames));
+        renderTable();
+        renderGames();
+      }
+    }
+
+    window.onload = () => {
+      renderTable();
+      renderGames();
+    };
+  </script>
+</body>
+</html>
